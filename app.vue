@@ -5,18 +5,20 @@ import Cell_1 from '~/public/Img1.png';
 import Cell_2 from '~/public/Img2.png';
 import Cell_3 from '~/public/Img3.png';
 
-const grid = ref(Array.from({ length: 5 }, () => Array(5).fill(null)));
-const showModal = ref(false);
+const grid = ref(Array.from({ length: 5 }, () => Array(5).fill(null)))
+const showModal = ref(false)
 const modalInfo = ref({
   row: null,
   col: null,
   content: null,
 });
 
+const theme = ref('dark')
+
 const initializeGrid = () => {
-  const savedGrid = localStorage.getItem('grid');
+  const savedGrid = localStorage.getItem('grid')
   if (savedGrid) {
-    grid.value = JSON.parse(savedGrid);
+    grid.value = JSON.parse(savedGrid)
   } else {
     grid.value[0][0] = Cell_3;
     grid.value[0][1] = Cell_1;
@@ -25,19 +27,32 @@ const initializeGrid = () => {
 };
 
 const saveGrid = () => {
-  localStorage.setItem('grid', JSON.stringify(grid.value));
-};
+  localStorage.setItem('grid', JSON.stringify(grid.value))
+}
+
+const saveTheme = () => {
+  localStorage.setItem('theme', theme.value)
+}
+
+const initializeTheme = () => {
+  const savedTheme = localStorage.getItem('theme')
+  if (savedTheme) {
+    theme.value = savedTheme;
+  }
+}
 
 onMounted(() => {
-  initializeGrid();
-});
+  initializeGrid()
+  initializeTheme()
+})
 
 watch(grid, saveGrid, { deep: true });
+watch(theme, saveTheme)
 
 let dragSource = {
   row: null,
   col: null,
-};
+}
 
 const dragStart = (event, rowIndex, colIndex) => {
   dragSource = {
@@ -45,41 +60,41 @@ const dragStart = (event, rowIndex, colIndex) => {
     col: colIndex,
   };
   event.dataTransfer.effectAllowed = 'move';
-};
+}
 
 const dragEnter = (event) => {
-  event.target.classList.add('drag-over');
-};
+  event.target.classList.add('drag-over')
+}
 
 const dragLeave = (event) => {
-  event.target.classList.remove('drag-over');
-};
+  event.target.classList.remove('drag-over')
+}
 
 const drop = (event, rowIndex, colIndex) => {
-  event.target.classList.remove('drag-over');
-  const targetCell = grid.value[rowIndex][colIndex];
-  const sourceCell = grid.value[dragSource.row][dragSource.col];
+  event.target.classList.remove('drag-over')
+  const targetCell = grid.value[rowIndex][colIndex]
+  const sourceCell = grid.value[dragSource.row][dragSource.col]
 
   if (targetCell === null) {
-    grid.value[rowIndex][colIndex] = sourceCell;
-    grid.value[dragSource.row][dragSource.col] = null;
+    grid.value[rowIndex][colIndex] = sourceCell
+    grid.value[dragSource.row][dragSource.col] = null
   }
-};
+}
 
 const showCell = (rowIndex, colIndex, cell) => {
-  const content = grid.value[rowIndex][colIndex];
+  const content = grid.value[rowIndex][colIndex]
   if (content) {
     modalInfo.value = {
       row: rowIndex,
       col: colIndex,
       content: cell,
     };
-    showModal.value = true;
+    showModal.value = true
   }
 };
 
 const closeModal = () => {
-  showModal.value = false;
+  showModal.value = false
 };
 
 const getCellClass = (rowIndex, colIndex) => {
@@ -93,16 +108,24 @@ const getCellClass = (rowIndex, colIndex) => {
 
 const deleteItem = () => {
   if (modalInfo.value.row !== null && modalInfo.value.col !== null) {
-    grid.value[modalInfo.value.row][modalInfo.value.col] = null;
+    grid.value[modalInfo.value.row][modalInfo.value.col] = null
     saveGrid();
-    closeModal();
+    closeModal()
   }
+};
+
+const toggleTheme = () => {
+  theme.value = theme.value === 'dark' ? 'light' : 'dark';
 };
 </script>
 
 <template>
-  <div class="main">
+  <div :class="`main ${theme}`">
+    
   <div class="flex-container">
+    <button @click="toggleTheme" class="theme-toggle">
+        {{ theme === 'dark' ? 'Light' : 'Dark' }} Theme
+      </button>
     <div>
     <div v-for="(row, rowIndex) in grid" :key="rowIndex" class="grid-row">
       <div
@@ -134,7 +157,7 @@ const deleteItem = () => {
         <div class="divImg"><img v-if="modalInfo.content" :src="modalInfo.content" alt="cell image" class="contentImg"/></div>
         <div class="border"></div>
         <InfiniteSkeleton/>
-        <div class="btnFlex"><button class="delete">Удалить предмет</button></div>
+        <div class="btnFlex"><button class="delete" @click="deleteItem">Удалить предмет</button></div>
       </div>
     </div>
   </div>
@@ -152,8 +175,9 @@ const deleteItem = () => {
 
 <style scoped>
   .main{
-    background-color: rgba(38, 38, 38, 1);
+    background-color: var(--background-color);
     height: 100vh;
+    transition: background-color 0.3s;
   }
   .flex-container{
     display: flex;
@@ -175,6 +199,13 @@ const deleteItem = () => {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+}
+.grid-cell.drag-over {
+  transform: scale(1.1); 
+}
+
+.grid-cell img.dragging {
+  opacity: 0.5;
 }
 
 .grid-row{
@@ -198,7 +229,7 @@ const deleteItem = () => {
   height: 758px;
   background-color: gray;
   border-radius: 0px 15px 15px 0px;
-  background-color: rgba(38, 38, 38, 1);
+  background-color: var(--background-color);
   transform: translateX(-150%);
   animation: ani 1s forwards;
 
@@ -263,7 +294,8 @@ const deleteItem = () => {
   height: 758px;
   background-color: gray;
   border-radius: 15px 15px 15px 15px;
-  background-color: rgba(38, 38, 38, 1);
+      background-color: var(--background-color);
+
 }
 .divImgLeft{
  display: flex;
@@ -271,5 +303,32 @@ const deleteItem = () => {
  height: 300px;
  align-items: center;
 
+}
+
+.theme-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: var(--delete-button-background-color);
+  color: var(--text-color);
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.dark {
+  --background-color: rgba(38, 38, 38, 1);
+  --text-color: white;
+  --border-color: rgba(77, 77, 77, 1);
+  --modal-background-color: rgba(38, 38, 38, 1);
+  --delete-button-background-color: rgba(250, 114, 114, 1);
+}
+
+.light {
+  --background-color: white;
+  --text-color: black;
+  --border-color: rgba(200, 200, 200, 1);
+  --modal-background-color: rgba(240, 240, 240, 1);
+  --delete-button-background-color: rgba(255, 0, 0, 1);
 }
 </style>
