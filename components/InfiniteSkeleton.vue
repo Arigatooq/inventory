@@ -10,13 +10,6 @@
     </div>
   </template>
   
-  <script setup>
-  import { ref, onMounted } from 'vue';
-  
-  const items = ref([]);
-
-  </script>
-  
   <style scoped>
   .main_flex{
     display: flex;

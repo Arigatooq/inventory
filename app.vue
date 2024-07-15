@@ -1,80 +1,103 @@
 <script setup>
-import { onMounted } from 'vue';
-import qwe from './public/favicon.ico'
-import asd from './public/asd.jpg'
+import { ref, onMounted, watch } from 'vue';
+
+import Cell_1 from '~/public/Img1.png';
+import Cell_2 from '~/public/Img2.png';
+import Cell_3 from '~/public/Img3.png';
 
 const grid = ref(Array.from({ length: 5 }, () => Array(5).fill(null)));
-const showContent = ref(false)
-
-
 const showModal = ref(false);
-const modalInfo = ref(
-  { 
-    row: null,
-    col: null,
-    content: null 
-  }
-)
-
-grid.value[0][0] = qwe
-grid.value[0][1] = asd
-
-
-let dragSource = { 
+const modalInfo = ref({
   row: null,
-  col: null 
-}
+  col: null,
+  content: null,
+});
 
-const dragStart = (event, rowIndex, colIndex) => {
-  dragSource = { 
-     row: rowIndex,
-     col: colIndex 
-    }
-  event.dataTransfer.effectAllowed = 'move'
-}
-
-
-const dragEnter = (event, rowIndex, colIndex) => {
-  event.target.classList.add('drag-over')
+const initializeGrid = () => {
+  const savedGrid = localStorage.getItem('grid');
+  if (savedGrid) {
+    grid.value = JSON.parse(savedGrid);
+  } else {
+    grid.value[0][0] = Cell_3;
+    grid.value[0][1] = Cell_1;
+    grid.value[0][2] = Cell_2;
+  }
 };
 
-const dragLeave = (event, rowIndex, colIndex) => {
-  event.target.classList.remove('drag-over')
+const saveGrid = () => {
+  localStorage.setItem('grid', JSON.stringify(grid.value));
+};
+
+onMounted(() => {
+  initializeGrid();
+});
+
+watch(grid, saveGrid, { deep: true });
+
+let dragSource = {
+  row: null,
+  col: null,
+};
+
+const dragStart = (event, rowIndex, colIndex) => {
+  dragSource = {
+    row: rowIndex,
+    col: colIndex,
+  };
+  event.dataTransfer.effectAllowed = 'move';
+};
+
+const dragEnter = (event) => {
+  event.target.classList.add('drag-over');
+};
+
+const dragLeave = (event) => {
+  event.target.classList.remove('drag-over');
 };
 
 const drop = (event, rowIndex, colIndex) => {
-  event.target.classList.remove('drag-over')
-  const targetCell = grid.value[rowIndex][colIndex]
-  const sourceCell = grid.value[dragSource.row][dragSource.col]
+  event.target.classList.remove('drag-over');
+  const targetCell = grid.value[rowIndex][colIndex];
+  const sourceCell = grid.value[dragSource.row][dragSource.col];
 
   if (targetCell === null) {
-    grid.value[rowIndex][colIndex] = sourceCell
-    grid.value[dragSource.row][dragSource.col] = null
+    grid.value[rowIndex][colIndex] = sourceCell;
+    grid.value[dragSource.row][dragSource.col] = null;
   }
 };
- const showCell = (rowIndex, colIndex, cell) =>{
-  const content = grid.value[rowIndex][colIndex]
-  if (content) {
 
+const showCell = (rowIndex, colIndex, cell) => {
+  const content = grid.value[rowIndex][colIndex];
+  if (content) {
     modalInfo.value = {
       row: rowIndex,
       col: colIndex,
-      content: cell
-    }
-    showModal.value = true
+      content: cell,
+    };
+    showModal.value = true;
   }
- }
- const closeModal = () => {
-  showModal.value = false
-}
+};
+
+const closeModal = () => {
+  showModal.value = false;
+};
+
 const getCellClass = (rowIndex, colIndex) => {
   const classes = [];
   if (rowIndex === 0 && colIndex === 0) classes.push('top-left');
   if (rowIndex === 0 && colIndex === 4) classes.push('top-right');
   if (rowIndex === 4 && colIndex === 0) classes.push('bottom-left');
   if (rowIndex === 4 && colIndex === 4) classes.push('bottom-right');
-  return classes.join(' ')
-}
+  return classes.join(' ');
+};
+
+const deleteItem = () => {
+  if (modalInfo.value.row !== null && modalInfo.value.col !== null) {
+    grid.value[modalInfo.value.row][modalInfo.value.col] = null;
+    saveGrid();
+    closeModal();
+  }
+};
 </script>
 
 <template>
@@ -103,12 +126,14 @@ const getCellClass = (rowIndex, colIndex) => {
         />
       </div>
     </div>
-    </div>
+      <InfiniteSkeletonBottom/>
+  </div>
     <div v-if="showModal" class="modal">
       <div class="modal-content">
         <div class="close" @click="closeModal"></div>
         <div class="divImg"><img v-if="modalInfo.content" :src="modalInfo.content" alt="cell image" class="contentImg"/></div>
         <div class="border"></div>
+        <InfiniteSkeleton/>
         <div class="btnFlex"><button class="delete">Удалить предмет</button></div>
       </div>
     </div>
@@ -121,6 +146,7 @@ const getCellClass = (rowIndex, colIndex) => {
       </div>
     </div>
   </div>
+  
 </div>
 </template>
 
@@ -206,7 +232,7 @@ const getCellClass = (rowIndex, colIndex) => {
   display: flex;
   justify-content: center;
   align-items: end;
-  height: 420px;
+  height: 110px;
 }
 .delete:hover{
   opacity: 0.5;
